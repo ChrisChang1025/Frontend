@@ -15,7 +15,7 @@ from Page.PC.pc_promotion import Promotion
 class TestPlatformSmoke: 
 
     def test_login(self,env_url,get_user):              
-        self.driver.get(env_url[0])  
+        self.driver.get(env_url['url'])  
         account , password = get_user
         home = Home(self.driver,self.screenshot_path)
         home.navigate_to_home_page()

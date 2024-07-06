@@ -1,3 +1,5 @@
+import tarfile
+import traceback
 import pytest
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium import webdriver
@@ -93,27 +95,27 @@ def upload_allure_report():
             sftp.mkdir(to_dir)
             if platform.system() == 'Windows':
                 sftp.cwd(to_dir)
-                from_dir =  os.path.normpath(os.getcwd() + '/report')
-                for _root, _dirs, _files in os.walk(from_dir):
-                    for f in _files:
-                        _folder = ".{}".format(_root.split(from_dir)[1].replace('\\','/'))
-                        try:
-                            sftp.mkdir(_folder)
-                        except Exception as error:
-                            pass
-
-                        fileName = os.path.join(_root, f).replace('\\', '/')
-                        sftp.put(fileName, "./{}/{}".format(_folder, f), preserve_mtime=True)
+                tarFileName = f"{new_file_name}.tar"
+                with tarfile.open(tarFileName, "w:gz") as tar:
+                    tar.add(os.path.normpath(os.getcwd() + '/Temp'), arcname=os.path.basename(os.path.normpath(os.getcwd() + '/Temp')))                            
+                sftp.put(os.path.normpath(os.getcwd()+ '/' + tarFileName).replace('\\', '/'), '/var/www/html/frontend_test_report/' + tarFileName ,preserve_mtime=True)
+                sftp.execute(f'tar xf /var/www/html/frontend_test_report/{tarFileName} -C /var/www/html/frontend_test_report/')
+                sftp.execute(f'mv /var/www/html/frontend_test_report/Temp/* /var/www/html/frontend_test_report/{new_file_name}')
+                sftp.execute(f'rm -rf /var/www/html/frontend_test_report/Temp /var/www/html/frontend_test_report/{tarFileName}')
+                os.system(f"rmdir /s /q {os.getcwd()}\\Temp")
+                os.remove(tarFileName)
             else:
                 sftp.put_r('Temp/', '/var/www/html/frontend_test_report/%s/' % (new_file_name))  
+                os.system('rm -rf ./Temp')    
             print('Allure Report Path : http://'+sHostName+'/frontend_test_report/%s/index.html' % (new_file_name))  
-            os.system('rm -rf ./Temp')            
+                    
     except:
+        print(traceback.format_exc())
         print(sys.exc_info())
 
 if __name__ == "__main__":
     pytest.main(['-sv','--alluredir','./Report','--clean-alluredir','--vend','vd004'])
     # pytest.main(['-sv','-m','wap','--alluredir','./Report','--clean-alluredir','--vend','vd004']) # Run WAP test case
-    # pytest.main(['-sv','-m','pc','--alluredir','./Report','--clean-alluredir','--vend','vd004'])  # Run PC test case
+    # pytest.main(['-sv','-m','DB_used','--alluredir','./Report','--clean-alluredir','--vend','vd004'])  # Run DB_used test case
     generate_allure_report()
     upload_allure_report()

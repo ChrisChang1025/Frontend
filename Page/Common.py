@@ -1,7 +1,8 @@
-import sys, datetime, traceback, time
+import sys, datetime, traceback, time, requests
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.common.action_chains import ActionChains as Actions
 
 
 class Common:
@@ -9,17 +10,49 @@ class Common:
     def __init__(self, browser, screenshot_path):
         self._browser = browser
         self._screenshot_path = screenshot_path
-        self._wait = WebDriverWait(self._browser, 10)
-
+        self._wait = WebDriverWait(self._browser, 30)
+        self.admin_token = None
 
     def wait_for(self,locator):
         return self._wait.until(ec.visibility_of_element_located(locator))
 
     def find(self,locator):
         return self._browser.find_element(*locator)
+    
+    def finds(self,locator) -> list:
+        return self._browser.find_elements(*locator)
 
+    def getElementText(self, _elm):
+        elms = self._browser.find_elements(*_elm)
+        print(elms)
+        if len(elms) > 0:
+            for elm in elms:
+                if elm.is_displayed():
+                    print(f'====={elm.text}')
+                    return elm.text
+            return ''
+        else:
+            return ''
+        
+    
     def screenshot(self, path):
         return self._browser.save_screenshot(path)
+
+    def getElementCount(self, _elm, _frame=False):
+            """ 檢查頁面物件是否存在且返回數量\n
+                Args: \n
+                    _page : [必要參數] 執行操作的頁面名稱
+                    _elm : [必要參數] 操作的物件名稱
+                    _frame : [選填參數] 物件是否在iframe中，預設為「不是」
+                Return: \n
+                    0 / 該物件數量
+            """
+            elms = self._browser.find_elements(*_elm)
+            print(elms)
+            if len(elms) > 0:
+                return len(elms)
+            else:
+                return 0
 
     def checkElementExists(self, _elm, _frame=False):
             """ 檢查頁面物件是否存在 \n
@@ -82,3 +115,10 @@ class Common:
             for s in formatted_lines[:-1]:
                 print(s)
             raise sys.exc_info()[1]
+
+    def drag_and_drop(self, elm, x,y):
+        action = Actions(self._browser)
+        element = self.find(elm)
+        action.drag_and_drop_by_offset(element,x,y).perform()
+
+    

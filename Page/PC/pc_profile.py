@@ -5,6 +5,7 @@ from ..Common import Common
 class Profile(Common):
     Avatar = (By.CSS_SELECTOR,'div[class^="lg:cursor-pointer"]')
     LogoutBtn = (By.CSS_SELECTOR,'div[class="flex justify-center"]')
+    AccountText = (By.CSS_SELECTOR,'div[class^="text-base text"]')
 
     def navigate_to_profile_page(self):
         self.wait_for(self.Avatar).click()

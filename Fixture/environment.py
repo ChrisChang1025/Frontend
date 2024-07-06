@@ -1,22 +1,43 @@
 import pytest
 import os
-
+import requests
 
 @pytest.fixture(scope="session")
 def env_url(env,vend):
     global url, admin_url
-    if env == "pre-prod":
-        url = "https://test_domain"
-        admin_url = "https://test_domain"
-    else:
-        url = f"https://test_domain"
-        admin_url = f"https://test_domain"
+    try:
+        url = "https://{test_domain}/env-url?password={password}"
+        if env :
+            url += f"&env={env}"
+            if vend :
+                url += f"&vend={vend}"
 
-    return url, admin_url
+        r = requests.get(url)
+        obj = r.json()
+
+        env_config = {
+            'env' : env,
+            'vend' : vend,
+            'vd_code' : obj['vd_code'],
+            'url' : obj['platform_url'],
+            'api_url' : obj['api_url'],
+            'admin_url' : obj['admin_url'],
+            'tiger_db_host' : obj['tiger_db_host'],
+            'tiger_db_user' : obj['tiger_db_user'],
+            'tiger_db_pw' : obj['tiger_db_pw']
+        }
+        return env_config
+        # return url, api_url, admin_url
+    except Exception as e :
+        pytest.exit(f'get env url error. ({repr(e)})')
+
+@pytest.fixture(scope="session")
+def get_admin_user():
+    return "qarobot4", "test1234", ""
 
 @pytest.fixture(scope="session")
 def get_user():
-    return "test_account", "test_password"
+    return "atrobot001", "test1234"
 
 @pytest.fixture(scope="session")
 def screenshot_dir():
